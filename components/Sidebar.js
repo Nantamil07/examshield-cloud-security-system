@@ -5,12 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
 
 import {
-  Home,
-  Upload,
-  FileCheck,
-  CalendarClock,
+  LayoutDashboard,
   ShieldCheck,
-  Building2,
   LogOut,
 } from "lucide-react";
 
@@ -18,74 +14,61 @@ export default function Sidebar({ role }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Menu items for each role
-const menus = {
-  setter: [
-    {
-      key: "setter-dashboard",
-      title: "Dashboard",
-      href: "/setter",
-      icon: Home,
-    },
-    {
-      key: "setter-upload",
-      title: "Upload Question Paper",
-      href: "/setter#upload",
-      icon: Upload,
-    },
-  ],
+  // Sidebar menu for each role
+  const menuItems = {
+    setter: [
+      {
+        title: "Dashboard",
+        href: "/setter",
+        icon: LayoutDashboard,
+      },
+    ],
 
-  reviewer: [
-    {
-      key: "reviewer-dashboard",
-      title: "Pending Papers",
-      href: "/reviewer",
-      icon: FileCheck,
-    },
-  ],
+    reviewer: [
+      {
+        title: "Dashboard",
+        href: "/reviewer",
+        icon: LayoutDashboard,
+      },
+    ],
 
-  admin: [
-    {
-      key: "admin-dashboard",
-      title: "Schedule Release",
-      href: "/admin",
-      icon: CalendarClock,
-    },
-    {
-  key: "security-dashboard",
-  title: "Security Dashboard",
-  href: "/security-dashboard",
-  icon: ShieldCheck,
-},
-  ],
+    admin: [
+      {
+        title: "Dashboard",
+        href: "/admin",
+        icon: LayoutDashboard,
+      },
+      {
+        title: "Security Dashboard",
+        href: "/security-dashboard",
+        icon: ShieldCheck,
+      },
+    ],
 
-  exam_center: [
-    {
-      key: "exam-dashboard",
-      title: "Available Papers",
-      href: "/exam-center",
-      icon: Building2,
-    },
-    {
-      key: "verify",
-      title: "Verify Integrity",
-      href: "/verify",
-      icon: ShieldCheck,
-    },
-  ],
-};
+    exam_center: [
+      {
+        title: "Dashboard",
+        href: "/exam-center",
+        icon: LayoutDashboard,
+      },
+      {
+        title: "Verify Integrity",
+        href: "/verify",
+        icon: ShieldCheck,
+      },
+    ],
+  };
 
-  // Logout Function
   async function handleLogout() {
     await supabase.auth.signOut();
-    router.push("/login");
+    router.replace("/login");
   }
 
   return (
-    <aside className="w-64 min-h-screen bg-blue-900 text-white flex flex-col justify-between shadow-lg">
-      {/* Logo */}
+    <aside className="w-64 bg-blue-900 text-white flex flex-col justify-between min-h-screen shadow-lg">
+      {/* Logo Section */}
       <div>
-        <div className="p-6 border-b border-blue-800">
+        <div className="px-6 py-6 border-b border-blue-800">
           <div className="flex items-center gap-3">
             <img
               src="/logo.png"
@@ -94,32 +77,36 @@ const menus = {
             />
 
             <div>
-              <h2 className="font-bold text-lg">ExamShield</h2>
+              <h1 className="text-lg font-bold">
+                ExamShield Cloud
+              </h1>
+
               <p className="text-xs text-blue-200">
-                Secure Cloud Portal
+                Secure Question Paper Portal
               </p>
             </div>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="mt-5 px-3 space-y-2">
-          {menus[role]?.map((item) => {
+        <nav className="mt-6 px-3 space-y-2">
+          {menuItems[role]?.map((item) => {
             const Icon = item.icon;
+
             const active = pathname === item.href;
 
             return (
               <Link
-                key={item.key}
+                key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                className={`flex items-center gap-3 rounded-lg px-4 py-3 transition ${
                   active
-                    ? "bg-white text-blue-900 font-semibold shadow"
+                    ? "bg-white text-blue-900 font-semibold"
                     : "hover:bg-blue-800 text-white"
                 }`}
               >
                 <Icon size={20} />
-                <span>{item.title}</span>
+                {item.title}
               </Link>
             );
           })}
@@ -127,10 +114,10 @@ const menus = {
       </div>
 
       {/* Logout */}
-      <div className="p-4 border-t border-blue-800">
+      <div className="border-t border-blue-800 p-4">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 w-full px-4 py-3 rounded-lg hover:bg-red-600 transition-all"
+          className="flex items-center gap-3 w-full rounded-lg px-4 py-3 hover:bg-red-600 transition"
         >
           <LogOut size={20} />
           Logout

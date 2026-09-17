@@ -1,5 +1,5 @@
-const colors = {
-  Pending: "bg-yellow-100 text-yellow-800",
+const statusColors = {
+  Pending: "bg-yellow-100 text-yellow-700",
   Approved: "bg-green-100 text-green-700",
   Scheduled: "bg-purple-100 text-purple-700",
   Released: "bg-blue-100 text-blue-700",
@@ -9,7 +9,10 @@ const colors = {
 export default function StatusBadge({ status }) {
   return (
     <span
-      className={`px-3 py-1 rounded-full text-sm font-semibold ${colors[status]}`}
+      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${
+        statusColors[status] ||
+        "bg-gray-100 text-gray-700"
+      }`}
     >
       {status}
     </span>

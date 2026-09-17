@@ -1,189 +1,320 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
 import { supabase } from "../../lib/supabase";
+
 import ProtectedRoute from "../../components/ProtectedRoute";
-import UploadCard from "../../components/UploadCard";
+import PageLayout from "../../components/PageLayout";
+import StatsCard from "../../components/StatsCard";
 import StatusBadge from "../../components/StatusBadge";
-import { updateQuestionPaperStatus } from "../../utils/reviewer";
+
+import { approvePaper, rejectPaper } from "../../utils/review";
+
+import {
+  FileClock,
+  CheckCircle,
+  XCircle,
+  MessageSquare,
+  FileCheck,
+} from "lucide-react";
 
 export default function ReviewerPage() {
-
   const [user, setUser] = useState(null);
   const [papers, setPapers] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [comments, setComments] = useState({});
+  const [loadingId, setLoadingId] = useState(null);
+  const [pageLoading, setPageLoading] = useState(true);
 
-  async function getReviewer() {
+  // ---------------- USER ----------------
 
-    const { data, error } = await supabase.auth.getUser();
-
-    if (error) {
-      console.log(error.message);
-      return;
-    }
-
+  async function loadUser() {
+    const { data } = await supabase.auth.getUser();
     setUser(data.user);
-
   }
+
+  // ---------------- LOAD PAPERS ----------------
 
   async function loadPendingPapers() {
-
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("question_papers")
       .select("*")
-      .eq("status", "Pending")
       .order("created_at", { ascending: false });
 
-    if (error) {
-      console.log(error.message);
+    setPapers(data || []);
+    setPageLoading(false);
+  }
+
+  // ---------------- APPROVE ----------------
+
+  async function handleApprove(id) {
+    setLoadingId(id);
+
+    try {
+      await approvePaper(id, user);
+      await loadPendingPapers();
+      alert("Question paper approved successfully.");
+    } catch (err) {
+      alert(err.message);
+    }
+
+    setLoadingId(null);
+  }
+
+  // ---------------- REJECT ----------------
+
+  async function handleReject(id) {
+    const comment = comments[id] || "";
+
+    if (!comment.trim()) {
+      alert("Please enter a rejection comment.");
       return;
     }
 
-    setPapers(data);
-    setLoading(false);
+    setLoadingId(id);
 
+    try {
+      await rejectPaper(id, comment, user);
+      await loadPendingPapers();
+      alert("Question paper rejected successfully.");
+    } catch (err) {
+      alert(err.message);
+    }
+
+    setLoadingId(null);
   }
-
-async function handleReview(paperId, status) {
-  try {
-    await updateQuestionPaperStatus(
-      paperId,
-      status,
-      comments[paperId] || "",
-      user.id
-    );
-
-    alert(`Question Paper ${status}!`);
-
-    // Reload pending papers
-    loadPendingPapers();
-  } catch (error) {
-    alert(error.message);
-  }
-}
 
   useEffect(() => {
-
-    getReviewer();
+    loadUser();
     loadPendingPapers();
-
   }, []);
 
+  if (pageLoading) {
+    return (
+      <ProtectedRoute allowedRole="reviewer">
+        <PageLayout
+          role="reviewer"
+          title="Reviewer Dashboard"
+          user={user}
+        >
+          <div className="flex justify-center items-center h-96">
+            <p className="text-blue-700 font-medium text-lg">
+              Loading dashboard...
+            </p>
+          </div>
+        </PageLayout>
+      </ProtectedRoute>
+    );
+  }
+
+  const pendingCount = papers.filter((p) => p.status === "Pending").length;
+  const approvedCount = papers.filter((p) => p.status === "Approved").length;
+  const rejectedCount = papers.filter((p) => p.status === "Rejected").length;
+
   return (
+    <ProtectedRoute allowedRole="reviewer">
+      <PageLayout
+        role="reviewer"
+        title="Reviewer Dashboard"
+        user={user}
+      >
+        {/* Statistics */}
 
-    <ProtectedRoute>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <StatsCard
+            title="Pending Review"
+            value={pendingCount}
+            color="#EA580C"
+            icon={FileClock}
+          />
 
-      <main className="min-h-screen bg-gray-100 p-8">
+          <StatsCard
+            title="Approved Papers"
+            value={approvedCount}
+            color="#16A34A"
+            icon={CheckCircle}
+          />
 
-        <UploadCard>
+          <StatsCard
+            title="Rejected Papers"
+            value={rejectedCount}
+            color="#DC2626"
+            icon={XCircle}
+          />
+        </div>
 
-          <h1 className="text-3xl font-bold text-green-700 mb-3">
-            Reviewer Dashboard
-          </h1>
+        {/* Pending Papers */}
 
-          <p className="mb-6">
-            Review uploaded question papers before releasing them.
-          </p>
+        <div className="bg-white rounded-xl border shadow-sm">
+          <div className="border-b px-6 py-5 flex items-center gap-3">
+            <FileCheck className="text-blue-700" />
 
-          {user ? (
-            <div className="bg-green-50 p-4 rounded-lg border mb-6">
-              <p><strong>Name:</strong> {user.user_metadata?.name}</p>
-              <p><strong>Email:</strong> {user.email}</p>
-              <p><strong>Role:</strong> {user.user_metadata?.role}</p>
+            <div>
+              <h2 className="text-xl font-bold text-blue-800">
+                Pending Question Papers
+              </h2>
+
+              <p className="text-sm text-gray-500">
+                Review uploaded papers before scheduling.
+              </p>
+            </div>
+          </div>
+
+          {pendingCount === 0 ? (
+            <div className="text-center py-16 text-gray-500">
+              No pending papers available for review.
             </div>
           ) : (
-            <p>Loading reviewer...</p>
+            <div className="space-y-6 p-6">
+              {papers
+                .filter((paper) => paper.status === "Pending")
+                .map((paper) => (
+                  <div
+                    key={paper.id}
+                    className="border rounded-xl p-5 bg-gray-50"
+                  >
+                    {/* Paper Info */}
+
+                    <div className="grid md:grid-cols-2 gap-4 mb-5">
+                      <div>
+                        <p className="text-sm text-gray-500">Subject</p>
+                        <p className="font-semibold">{paper.subject}</p>
+                      </div>
+
+                      <div>
+                        <p className="text-sm text-gray-500">Department</p>
+                        <p className="font-semibold">{paper.department}</p>
+                      </div>
+
+                      <div>
+                        <p className="text-sm text-gray-500">Semester</p>
+                        <p className="font-semibold">{paper.semester}</p>
+                      </div>
+
+                      <div>
+                        <p className="text-sm text-gray-500">Exam</p>
+                        <p className="font-semibold">{paper.exam_name}</p>
+                      </div>
+
+                      <div>
+                        <p className="text-sm text-gray-500">Status</p>
+                        <StatusBadge status={paper.status} />
+                      </div>
+
+                      <div>
+                        <p className="text-sm text-gray-500">Uploaded On</p>
+                        <p className="font-semibold">
+                          {new Date(paper.created_at).toLocaleDateString(
+                            "en-IN"
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Comment */}
+
+                    <div className="mb-5">
+                      <label className="flex items-center gap-2 text-sm font-medium mb-2">
+                        <MessageSquare size={16} />
+                        Reviewer Comment (Required for Rejection)
+                      </label>
+
+                      <textarea
+                        rows={3}
+                        placeholder="Enter review comments..."
+                        value={comments[paper.id] || ""}
+                        onChange={(e) =>
+                          setComments({
+                            ...comments,
+                            [paper.id]: e.target.value,
+                          })
+                        }
+                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-600 outline-none resize-none"
+                      />
+                    </div>
+
+                    {/* Buttons */}
+
+                    <div className="flex flex-wrap gap-4">
+                      <button
+                        onClick={() => handleApprove(paper.id)}
+                        disabled={loadingId === paper.id}
+                        className="bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white px-5 py-2 rounded-lg font-medium transition"
+                      >
+                        {loadingId === paper.id
+                          ? "Approving..."
+                          : "Approve"}
+                      </button>
+
+                      <button
+                        onClick={() => handleReject(paper.id)}
+                        disabled={loadingId === paper.id}
+                        className="bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white px-5 py-2 rounded-lg font-medium transition"
+                      >
+                        {loadingId === paper.id
+                          ? "Rejecting..."
+                          : "Reject"}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
           )}
+        </div>
 
-          <h2 className="text-xl font-semibold mb-4">
-            Pending Question Papers ({papers.length})
-          </h2>
+        {/* Review History */}
 
-          {loading ? (
-  <p className="text-gray-500">Loading papers...</p>
-) : papers.length === 0 ? (
-  <p className="text-red-500">No pending question papers found.</p>
-) : (
-  <div className="overflow-x-auto">
-    <table className="w-full border border-gray-300 rounded-lg">
-      <thead className="bg-green-100">
-        <tr>
-          <th className="border p-3">Subject</th>
-          <th className="border p-3">Department</th>
-          <th className="border p-3">Semester</th>
-          <th className="border p-3">Exam Name</th>
-          <th className="border p-3">Status</th>
-          <th className="border p-3">Uploaded Date</th>
-          <th className="border p-3">Review Comment</th>
+        <div className="bg-white rounded-xl shadow-sm border mt-10">
+          <div className="border-b px-6 py-5">
+            <h2 className="text-xl font-bold text-blue-800">
+              Review History
+            </h2>
 
-<th className="border p-3">Actions</th>
-        </tr>
-      </thead>
+            <p className="text-sm text-gray-500 mt-1">
+              Approved and rejected papers.
+            </p>
+          </div>
 
-      <tbody>
-        {papers.map((paper) => (
-          <tr key={paper.id} className="text-center hover:bg-gray-50">
-            <td className="border p-3">{paper.subject}</td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-blue-700 text-white">
+                <tr>
+                  <th className="px-5 py-3 text-left">Subject</th>
+                  <th className="px-5 py-3 text-left">Exam</th>
+                  <th className="px-5 py-3 text-left">Status</th>
+                  <th className="px-5 py-3 text-left">Reviewer Comment</th>
+                </tr>
+              </thead>
 
-            <td className="border p-3">{paper.department}</td>
+              <tbody>
+                {papers
+                  .filter((p) => p.status !== "Pending")
+                  .map((paper) => (
+                    <tr
+                      key={paper.id}
+                      className="border-b hover:bg-gray-50"
+                    >
+                      <td className="px-5 py-4 font-medium">
+                        {paper.subject}
+                      </td>
 
-            <td className="border p-3">{paper.semester}</td>
+                      <td className="px-5 py-4">
+                        {paper.exam_name}
+                      </td>
 
-            <td className="border p-3">{paper.exam_name}</td>
+                      <td className="px-5 py-4">
+                        <StatusBadge status={paper.status} />
+                      </td>
 
-            <td className="border p-3">
-              <StatusBadge status={paper.status} />
-            </td>
-
-            <td className="border p-3">
-              {new Date(paper.created_at).toLocaleString()}
-            </td>
-            <td className="border p-3">
-  <textarea
-    rows={2}
-    placeholder="Enter review comment..."
-    value={comments[paper.id] || ""}
-    onChange={(e) =>
-      setComments({
-        ...comments,
-        [paper.id]: e.target.value,
-      })
-    }
-    className="border rounded p-2 w-full text-sm"
-  />
-</td>
-<td className="border p-3">
-  <div className="flex gap-2 justify-center">
-    <button
-      onClick={() => handleReview(paper.id, "Approved")}
-      className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-sm"
-    >
-      Approve
-    </button>
-
-    <button
-      onClick={() => handleReview(paper.id, "Rejected")}
-      className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded text-sm"
-    >
-      Reject
-    </button>
-  </div>
-</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-)}
-
-        </UploadCard>
-
-      </main>
-
+                      <td className="px-5 py-4 text-gray-600">
+                        {paper.reviewer_comment || "-"}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </PageLayout>
     </ProtectedRoute>
-
   );
-
 }
