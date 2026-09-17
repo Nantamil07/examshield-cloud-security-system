@@ -16,7 +16,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  async function handleRegister(e) {
+  async function register(e) {
     e.preventDefault();
 
     setLoading(true);
@@ -39,7 +39,7 @@ export default function RegisterPage() {
       return;
     }
 
-    setMessage("Account created successfully. Please login.");
+    setMessage("Account created successfully.");
 
     setTimeout(() => {
       router.replace("/login");
@@ -49,19 +49,17 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-      <div className="bg-white rounded-2xl shadow-lg w-full max-w-lg p-8">
-        {/* Logo */}
-
-        <div className="flex justify-center mb-5">
+    <main className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-10">
+      <div className="bg-white rounded-2xl border shadow-lg w-full max-w-lg p-8">
+        <div className="flex justify-center">
           <img
             src="/logo.png"
-            alt="ExamShield"
             className="w-20 h-20 rounded-full bg-blue-50 p-2"
+            alt="Logo"
           />
         </div>
 
-        <h1 className="text-3xl font-bold text-center text-blue-800">
+        <h1 className="text-3xl font-bold text-center text-blue-900 mt-5">
           Create Account
         </h1>
 
@@ -69,13 +67,9 @@ export default function RegisterPage() {
           Register for ExamShield Cloud
         </p>
 
-        <form onSubmit={handleRegister} className="space-y-5">
-          {/* Name */}
-
+        <form onSubmit={register} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium mb-2">
-              Full Name
-            </label>
+            <label className="text-sm font-medium">Full Name</label>
 
             <input
               type="text"
@@ -83,38 +77,27 @@ export default function RegisterPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter full name"
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-600 outline-none"
             />
           </div>
 
-          {/* Email */}
-
           <div>
-            <label className="block text-sm font-medium mb-2">
-              Email Address
-            </label>
+            <label className="text-sm font-medium">Email Address</label>
 
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter email address"
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-600 outline-none"
+              placeholder="Enter email"
             />
           </div>
 
-          {/* Role */}
-
           <div>
-            <label className="block text-sm font-medium mb-2">
-              Select Role
-            </label>
+            <label className="text-sm font-medium">Select Role</label>
 
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-600 outline-none"
             >
               <option value="setter">Question Setter</option>
               <option value="reviewer">Reviewer</option>
@@ -123,12 +106,8 @@ export default function RegisterPage() {
             </select>
           </div>
 
-          {/* Password */}
-
           <div>
-            <label className="block text-sm font-medium mb-2">
-              Password
-            </label>
+            <label className="text-sm font-medium">Password</label>
 
             <input
               type="password"
@@ -136,15 +115,14 @@ export default function RegisterPage() {
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter password"
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-600 outline-none"
+              placeholder="Minimum 6 characters"
             />
           </div>
 
           {message && (
             <div
               className={`rounded-lg p-3 text-sm ${
-                message.includes("successfully")
+                message.includes("success")
                   ? "bg-green-50 border border-green-300 text-green-700"
                   : "bg-red-50 border border-red-300 text-red-700"
               }`}
@@ -153,27 +131,23 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {/* Button */}
-
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-lg font-semibold transition disabled:bg-blue-300"
+            className="w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-lg font-semibold disabled:bg-blue-300"
           >
             {loading ? "Creating Account..." : "Create Account"}
           </button>
         </form>
 
-        {/* Login Link */}
-
-        <div className="text-center mt-6">
-          <p className="text-sm text-gray-600">
+        <div className="border-t mt-8 pt-5 text-center text-sm">
+          <p className="text-gray-600">
             Already have an account?
           </p>
 
           <Link
             href="/login"
-            className="text-blue-700 font-medium hover:underline"
+            className="text-blue-700 font-semibold hover:underline"
           >
             Login Here
           </Link>

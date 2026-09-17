@@ -5,21 +5,17 @@ export default function StatsCard({
   color = "#2563EB",
 }) {
   return (
-    <div className="bg-white rounded-xl border shadow-sm p-6 hover:shadow-md transition">
-      <div className="flex items-center justify-between">
+    <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition">
+      <div className="flex justify-between items-center">
         <div>
-          <p className="text-gray-500 text-sm mb-2">
-            {title}
-          </p>
+          <p className="text-sm text-gray-500 mb-1">{title}</p>
 
-          <h2 className="text-3xl font-bold text-gray-800">
-            {value}
-          </h2>
+          <h2 className="text-3xl font-bold text-gray-800">{value}</h2>
         </div>
 
         <div
-          className="w-14 h-14 rounded-full flex items-center justify-center"
-          style={{ backgroundColor: `${color}20` }}
+          className="rounded-full p-3"
+          style={{ backgroundColor: `${color}15` }}
         >
           {Icon && <Icon size={28} color={color} />}
         </div>

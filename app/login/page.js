@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 
 export default function LoginPage() {
@@ -14,7 +14,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Redirect if already logged in
   useEffect(() => {
     checkSession();
   }, []);
@@ -23,11 +22,11 @@ export default function LoginPage() {
     const { data } = await supabase.auth.getUser();
 
     if (data.user) {
-      redirectByRole(data.user.user_metadata?.role);
+      redirectUser(data.user.user_metadata.role);
     }
   }
 
-  function redirectByRole(role) {
+  function redirectUser(role) {
     switch (role) {
       case "setter":
         router.replace("/setter");
@@ -50,17 +49,16 @@ export default function LoginPage() {
     }
   }
 
-  async function handleLogin(e) {
+  async function login(e) {
     e.preventDefault();
 
     setLoading(true);
     setError("");
 
-    const { data, error } =
-      await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
     if (error) {
       setError(error.message);
@@ -68,49 +66,43 @@ export default function LoginPage() {
       return;
     }
 
-    redirectByRole(data.user.user_metadata?.role);
+    redirectUser(data.user.user_metadata.role);
   }
 
   return (
     <main className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-      <div className="bg-white rounded-2xl shadow-lg w-full max-w-md p-8">
-        {/* Logo */}
-        <div className="flex justify-center mb-5">
+      <div className="bg-white rounded-2xl border shadow-lg w-full max-w-md p-8">
+        <div className="flex justify-center">
           <img
             src="/logo.png"
-            alt="ExamShield"
             className="w-20 h-20 rounded-full bg-blue-50 p-2"
+            alt="Logo"
           />
         </div>
 
-        <h1 className="text-3xl font-bold text-center text-blue-800">
-          ExamShield Cloud
+        <h1 className="text-3xl font-bold text-center text-blue-900 mt-5">
+          Login Portal
         </h1>
 
         <p className="text-center text-gray-500 mt-2 mb-8">
-          Secure Question Paper Management Portal
+          Secure access to ExamShield Cloud
         </p>
 
-        <form onSubmit={handleLogin} className="space-y-5">
+        <form onSubmit={login} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium mb-2">
-              Email Address
-            </label>
+            <label className="text-sm font-medium">Email Address</label>
 
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-600 outline-none"
+              placeholder="Enter email"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">
-              Password
-            </label>
+            <label className="text-sm font-medium">Password</label>
 
             <input
               type="password"
@@ -118,7 +110,6 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter password"
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-600 outline-none"
             />
           </div>
 
@@ -131,32 +122,31 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-lg font-semibold transition"
+            className="w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-lg font-semibold disabled:bg-blue-300"
           >
             {loading ? "Signing In..." : "Login"}
           </button>
         </form>
-        <div className="text-center mt-5">
-  <p className="text-sm text-gray-600 mb-2">
-    Don't have an account?
-  </p>
 
-  <Link
-    href="/register"
-    className="text-blue-700 font-medium hover:underline"
-  >
-    Create Account
-  </Link>
-</div>
+        <div className="border-t mt-8 pt-5 text-center text-sm">
+          <p className="text-gray-600">
+            Don't have an account?
+          </p>
 
-        <div className="mt-8 border-t pt-5 text-center text-sm text-gray-500">
-          <p>Cloud Computing Microproject</p>
-          <p>Coimbatore Institute of Technology</p>
+          <Link
+            href="/register"
+            className="text-blue-700 font-semibold hover:underline"
+          >
+            Create Account
+          </Link>
         </div>
 
-        <div className="text-center mt-5">
-          <Link href="/" className="text-blue-700 hover:underline text-sm">
-            ← Back to Home
+        <div className="mt-6 text-center">
+          <Link
+            href="/"
+            className="text-gray-500 hover:text-blue-700 text-sm"
+          >
+            Back to Home
           </Link>
         </div>
       </div>

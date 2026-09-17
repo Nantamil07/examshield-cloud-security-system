@@ -6,7 +6,11 @@ import { supabase } from "../lib/supabase";
 
 import {
   LayoutDashboard,
-  ShieldCheck,
+  Upload,
+  ClipboardCheck,
+  CalendarClock,
+  Download,
+  Shield,
   LogOut,
 } from "lucide-react";
 
@@ -14,11 +18,10 @@ export default function Sidebar({ role }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Sidebar menu for each role
-  const menuItems = {
+  const menu = {
     setter: [
       {
-        title: "Dashboard",
+        name: "Dashboard",
         href: "/setter",
         icon: LayoutDashboard,
       },
@@ -26,98 +29,95 @@ export default function Sidebar({ role }) {
 
     reviewer: [
       {
-        title: "Dashboard",
+        name: "Dashboard",
         href: "/reviewer",
-        icon: LayoutDashboard,
+        icon: ClipboardCheck,
       },
     ],
 
     admin: [
       {
-        title: "Dashboard",
+        name: "Dashboard",
         href: "/admin",
-        icon: LayoutDashboard,
+        icon: CalendarClock,
       },
       {
-        title: "Security Dashboard",
+        name: "Security Dashboard",
         href: "/security-dashboard",
-        icon: ShieldCheck,
+        icon: Shield,
       },
     ],
 
     exam_center: [
       {
-        title: "Dashboard",
+        name: "Dashboard",
         href: "/exam-center",
-        icon: LayoutDashboard,
+        icon: Download,
       },
       {
-        title: "Verify Integrity",
+        name: "Verify Integrity",
         href: "/verify",
-        icon: ShieldCheck,
+        icon: Shield,
       },
     ],
   };
 
-  async function handleLogout() {
+  async function logout() {
     await supabase.auth.signOut();
     router.replace("/login");
   }
 
   return (
-    <aside className="w-64 bg-blue-900 text-white flex flex-col justify-between min-h-screen shadow-lg">
-      {/* Logo Section */}
-      <div>
-        <div className="px-6 py-6 border-b border-blue-800">
-          <div className="flex items-center gap-3">
-            <img
-              src="/logo.png"
-              alt="ExamShield Logo"
-              className="w-10 h-10 rounded-full bg-white p-1"
-            />
+    <aside className="w-72 bg-blue-900 text-white min-h-screen flex flex-col">
+      {/* Logo */}
 
-            <div>
-              <h1 className="text-lg font-bold">
-                ExamShield Cloud
-              </h1>
+      <div className="px-6 py-7 border-b border-blue-800">
+        <div className="flex items-center gap-3">
+          <div className="bg-white rounded-full p-2">
+            <Upload className="text-blue-700" size={24} />
+          </div>
 
-              <p className="text-xs text-blue-200">
-                Secure Question Paper Portal
-              </p>
-            </div>
+          <div>
+            <h2 className="font-bold text-lg">ExamShield Cloud</h2>
+
+            <p className="text-blue-200 text-xs">
+              Secure Exam Portal
+            </p>
           </div>
         </div>
-
-        {/* Navigation */}
-        <nav className="mt-6 px-3 space-y-2">
-          {menuItems[role]?.map((item) => {
-            const Icon = item.icon;
-
-            const active = pathname === item.href;
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 rounded-lg px-4 py-3 transition ${
-                  active
-                    ? "bg-white text-blue-900 font-semibold"
-                    : "hover:bg-blue-800 text-white"
-                }`}
-              >
-                <Icon size={20} />
-                {item.title}
-              </Link>
-            );
-          })}
-        </nav>
       </div>
 
+      {/* Navigation */}
+
+      <nav className="flex-1 px-4 py-6 space-y-2">
+        {menu[role]?.map((item) => {
+          const Icon = item.icon;
+
+          const active = pathname === item.href;
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition ${
+                active
+                  ? "bg-white text-blue-800 font-semibold"
+                  : "text-blue-100 hover:bg-blue-800"
+              }`}
+            >
+              <Icon size={20} />
+              {item.name}
+            </Link>
+          );
+        })}
+      </nav>
+
       {/* Logout */}
-      <div className="border-t border-blue-800 p-4">
+
+      <div className="p-4 border-t border-blue-800">
         <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 w-full rounded-lg px-4 py-3 hover:bg-red-600 transition"
+          onClick={logout}
+          className="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-red-600 transition"
         >
           <LogOut size={20} />
           Logout

@@ -9,6 +9,11 @@ import UploadCard from "../../components/UploadCard";
 import FileInfoCard from "../../components/FileInfoCard";
 import StatusBadge from "../../components/StatusBadge";
 import StatsCard from "../../components/StatsCard";
+import Button from "../../components/Button";
+import TableCard from "../../components/TableCard";
+import EmptyState from "../../components/EmptyState";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import Toast from "../../components/Toast";
 
 import { uploadQuestionPaper } from "../../utils/upload";
 
@@ -24,6 +29,7 @@ export default function SetterPage() {
   const [papers, setPapers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
+  const [toast, setToast] = useState(null);
 
   const [file, setFile] = useState(null);
 
@@ -61,45 +67,61 @@ export default function SetterPage() {
 
   // ---------------- UPLOAD ----------------
 
-  async function handleUpload() {
-    if (!file) {
-      alert("Please select a PDF file.");
-      return;
-    }
-
-    if (
-      !meta.subject ||
-      !meta.department ||
-      !meta.semester ||
-      !meta.exam_name
-    ) {
-      alert("Please fill all the required fields.");
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      await uploadQuestionPaper(file, meta, user);
-
-      alert("Question paper uploaded successfully.");
-
-      setFile(null);
-
-      setMeta({
-        subject: "",
-        department: "",
-        semester: "",
-        exam_name: "",
-      });
-
-      await loadUploadedPapers();
-    } catch (error) {
-      alert(error.message);
-    } finally {
-      setLoading(false);
-    }
+async function handleUpload() {
+  if (!file) {
+    setToast({
+      type: "error",
+      message: "Please select a PDF file.",
+    });
+    return;
   }
+
+  if (
+    !meta.subject ||
+    !meta.department ||
+    !meta.semester ||
+    !meta.exam_name
+  ) {
+    setToast({
+      type: "error",
+      message: "Please fill all required fields.",
+    });
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    await uploadQuestionPaper(file, meta, user);
+
+    setToast({
+      type: "success",
+      message: "Question paper uploaded successfully.",
+    });
+
+    setFile(null);
+
+    setMeta({
+      subject: "",
+      department: "",
+      semester: "",
+      exam_name: "",
+    });
+
+    await loadUploadedPapers();
+
+    setTimeout(() => setToast(null), 3000);
+  } catch (error) {
+    setToast({
+      type: "error",
+      message: error.message,
+    });
+
+    setTimeout(() => setToast(null), 3000);
+  } finally {
+    setLoading(false);
+  }
+}
 
   // ---------------- INIT ----------------
 
@@ -109,22 +131,18 @@ export default function SetterPage() {
   }, []);
 
   if (pageLoading) {
-    return (
-      <ProtectedRoute allowedRole="setter">
-        <PageLayout
-          role="setter"
-          title="Question Setter Dashboard"
-          user={user}
-        >
-          <div className="flex justify-center items-center h-96">
-            <p className="text-blue-700 font-medium text-lg">
-              Loading dashboard...
-            </p>
-          </div>
-        </PageLayout>
-      </ProtectedRoute>
-    );
-  }
+  return (
+    <ProtectedRoute allowedRole="setter">
+      <PageLayout
+        role="setter"
+        title="Question Setter Dashboard"
+        user={user}
+      >
+        <LoadingSpinner text="Loading Question Setter Dashboard..." />
+      </PageLayout>
+    </ProtectedRoute>
+  );
+}
 
   // ---------------- UI ----------------
 
@@ -136,7 +154,12 @@ export default function SetterPage() {
         user={user}
       >
         {/* Statistics Cards */}
-
+{toast && (
+  <Toast
+    type={toast.type}
+    message={toast.message}
+  />
+)}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <StatsCard
             title="Uploaded Papers"
@@ -163,7 +186,7 @@ export default function SetterPage() {
         {/* Upload Section */}
 
         <UploadCard>
-          <div className="mb-6">
+          <div className="space-y-6">
             <h2 className="text-2xl font-bold text-blue-800">
               Upload Question Paper
             </h2>
@@ -276,84 +299,63 @@ export default function SetterPage() {
 
         {/* Uploaded Papers */}
 
-        <div className="bg-white rounded-xl shadow-sm border mt-10">
-          <div className="flex items-center gap-3 border-b px-6 py-5">
-            <FileText className="text-blue-700" />
+        <TableCard
+  title="Uploaded Question Papers"
+  subtitle="Encrypted papers uploaded by the Question Setter."
+  headers={[
+    "Subject",
+    "Department",
+    "Semester",
+    "Exam",
+    "Status",
+    "Uploaded On",
+  ]}
+>
+  {papers.length === 0 ? (
+    <tr>
+      <td colSpan={6} className="p-0">
+        <EmptyState
+          title="No Question Papers Uploaded"
+          description="Upload your first encrypted PDF to begin the secure review workflow."
+        />
+      </td>
+    </tr>
+  ) : (
+    papers.map((paper) => (
+      <tr
+        key={paper.id}
+        className="border-b hover:bg-blue-50 transition"
+      >
+        <td className="px-5 py-4 font-medium">{paper.subject}</td>
 
-            <div>
-              <h2 className="text-xl font-bold text-blue-800">
-                Uploaded Question Papers
-              </h2>
+        <td className="px-5 py-4">{paper.department}</td>
 
-              <p className="text-sm text-gray-500">
-                All uploaded papers and their current review status.
-              </p>
-            </div>
-          </div>
+        <td className="px-5 py-4">{paper.semester}</td>
 
-          {papers.length === 0 ? (
-            <div className="py-16 text-center text-gray-500">
-              No question papers uploaded yet.
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-blue-700 text-white">
-                  <tr>
-                    <th className="px-5 py-3 text-left">Subject</th>
-                    <th className="px-5 py-3 text-left">Department</th>
-                    <th className="px-5 py-3 text-left">Semester</th>
-                    <th className="px-5 py-3 text-left">Exam</th>
-                    <th className="px-5 py-3 text-left">Status</th>
-                    <th className="px-5 py-3 text-left">Uploaded On</th>
-                  </tr>
-                </thead>
+        <td className="px-5 py-4">{paper.exam_name}</td>
 
-                <tbody>
-                  {papers.map((paper) => (
-                    <tr
-                      key={paper.id}
-                      className="border-b hover:bg-gray-50"
-                    >
-                      <td className="px-5 py-4 font-medium">
-                        {paper.subject}
-                      </td>
+        <td className="px-5 py-4">
+          <StatusBadge status={paper.status} />
+        </td>
 
-                      <td className="px-5 py-4">
-                        {paper.department}
-                      </td>
+        <td className="px-5 py-4 text-gray-600">
+          {new Date(paper.created_at).toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })}
 
-                      <td className="px-5 py-4">
-                        {paper.semester}
-                      </td>
+          {" • "}
 
-                      <td className="px-5 py-4">
-                        {paper.exam_name}
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <StatusBadge status={paper.status} />
-                      </td>
-
-                      <td className="px-5 py-4 text-gray-600">
-                        {new Date(paper.created_at).toLocaleDateString("en-IN", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        })}{" "}
-                        •{" "}
-                        {new Date(paper.created_at).toLocaleTimeString("en-IN", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+          {new Date(paper.created_at).toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </td>
+      </tr>
+    ))
+  )}
+</TableCard>
       </PageLayout>
     </ProtectedRoute>
   );

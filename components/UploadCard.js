@@ -1,13 +1,7 @@
-export default function UploadCard({children}){
-
-    return(
-
-        <div className="bg-white p-8 rounded-xl shadow-md border">
-
-            {children}
-
-        </div>
-
-    );
-
+export default function UploadCard({ children }) {
+  return (
+    <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 mb-8">
+      {children}
+    </section>
+  );
 }
