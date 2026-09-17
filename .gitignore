@@ -1,17 +1,17 @@
-# Node modules
+# dependencies
 node_modules/
 
-# Next.js build
+# next build
 .next/
-out/
 
-# Environment variables
+# environment variables
 .env.local
-.env
 
-# Logs
+# logs
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# OS files
+# OS
 .DS_Store
 Thumbs.db
