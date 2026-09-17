@@ -136,6 +136,18 @@ export default function LoginPage() {
             {loading ? "Signing In..." : "Login"}
           </button>
         </form>
+        <div className="text-center mt-5">
+  <p className="text-sm text-gray-600 mb-2">
+    Don't have an account?
+  </p>
+
+  <Link
+    href="/register"
+    className="text-blue-700 font-medium hover:underline"
+  >
+    Create Account
+  </Link>
+</div>
 
         <div className="mt-8 border-t pt-5 text-center text-sm text-gray-500">
           <p>Cloud Computing Microproject</p>
